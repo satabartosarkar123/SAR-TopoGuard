@@ -12,6 +12,7 @@ from typing import List, Tuple
 
 __all__ = [
     "PROJECT_ROOT", "DATA_ROOT", "MANIFEST_PATH", "CHECKPOINT_DIR", "LOG_DIR",
+    "get_device",
     "UNSEEN_ROIS", "STANDARD_TEST_ROIS", "VAL_FRACTION",
     "PATCH_SIZE", "SAR_CHANNELS", "OPTICAL_CHANNELS",
     "TrainConfig", "TRAIN_CFG",
@@ -31,6 +32,20 @@ LOG_DIR = PROJECT_ROOT / "logs"
 # Create dirs on import (no side-effects beyond mkdir)
 for _d in (DATA_ROOT, MANIFEST_PATH, CHECKPOINT_DIR, LOG_DIR):
     _d.mkdir(parents=True, exist_ok=True)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Device Selection
+# ──────────────────────────────────────────────────────────────────────
+import torch
+
+def get_device() -> torch.device:
+    """Return the optimal device available (CUDA > MPS > CPU)."""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
 
 
 # ──────────────────────────────────────────────────────────────────────

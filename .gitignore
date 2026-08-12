@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+logs/
+results/
+test_data/
+pipeline_state.json
+checkpoints/
+manifests/
+data/
+CRASH_REPORT.txt
