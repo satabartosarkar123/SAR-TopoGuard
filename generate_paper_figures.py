@@ -46,7 +46,7 @@ def figure_1():
         if opt_img.shape[-1] > 3:
             opt_img = opt_img[..., :3]
             
-        opt_naive = np.clip(opt_img / 255.0, 0, 1)
+        opt_naive = np.clip(opt_img / 10000.0, 0, 1)
         
         p2 = np.percentile(opt_img, 2)
         p98 = np.percentile(opt_img, 98)
@@ -70,6 +70,8 @@ def figure_1():
         for ax in axes:
             ax.set_xticks([])
             ax.set_yticks([])
+            
+        plt.subplots_adjust(wspace=0.02, left=0.01, right=0.99, bottom=0.01, top=0.99)
             
         kb = _save_fig(fig, "figure1_normalization")
         plt.close(fig)
