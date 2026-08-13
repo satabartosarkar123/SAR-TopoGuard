@@ -153,8 +153,8 @@ def figure_4():
             
         df = pd.read_csv(csv_path)
         methods = ["baseline1", "baseline2", "topoguard"]
-        labels = ["Vanilla Pix2Pix", "B2 + Edge Loss", "SAR-TopoGuard"]
-        colors = ['#808080', '#6BAED6', '#E63946']
+        labels = ["Vanilla Pix2Pix", "SAR-TopoGuard", "B2 + Edge Loss"]
+        colors = ['#808080', '#E63946', '#6BAED6']
         
         stats = df.groupby("method")[['psnr', 'ssim', 'edge_iou', 'smr']].agg(['mean', 'std']).reset_index()
         
@@ -227,7 +227,7 @@ def figure_5():
         top_ids = gain.nlargest(4).index.tolist()
         
         cols = ["Urban 1", "Urban 2", "Natural", "Water"]
-        rows = ["SAR", "Ground Truth", "Vanilla", "B2 + Edge", "TopoGuard"]
+        rows = ["SAR Input", "Ground Truth", "Vanilla Pix2Pix", "SAR-TopoGuard", "B2 + Edge Loss"]
         
         fig, axes = plt.subplots(5, 4, figsize=(7, 9))
         plt.subplots_adjust(wspace=0.02, hspace=0.02)
