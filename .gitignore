@@ -8,3 +8,7 @@ checkpoints/
 manifests/
 data/
 CRASH_REPORT.txt
+venv/
+mini_sen12_data/
+raw_data/
+weights/
