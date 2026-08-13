@@ -230,8 +230,8 @@ class UNetGenerator(nn.Module):
 
         out = self.final(torch.cat([dec2, enc1], dim=1))    # (B,  OC, 256,256)
 
-        # Tanh → [-1, 1]; rescale to [0, 1]
-        return (out + 1.0) * 0.5
+        # Tanh → [-1, 1] (matches our [-1, 1] normalised targets)
+        return out
 
 
 # ======================================================================
@@ -271,7 +271,7 @@ class PatchGANDiscriminator(nn.Module):
             in_ch: int, out_ch: int, stride: int, use_norm: bool,
         ) -> nn.Sequential:
             layers = [
-                nn.Conv2d(in_ch, out_ch, kernel_size=4, stride=stride, padding=1, bias=False),
+                nn.utils.spectral_norm(nn.Conv2d(in_ch, out_ch, kernel_size=4, stride=stride, padding=1, bias=False)),
             ]
             if use_norm:
                 layers.append(nn.InstanceNorm2d(out_ch, affine=True))
@@ -283,7 +283,7 @@ class PatchGANDiscriminator(nn.Module):
             _disc_block(64,         128, stride=2, use_norm=True),    # 128→64
             _disc_block(128,        256, stride=2, use_norm=True),    # 64→32
             _disc_block(256,        512, stride=1, use_norm=True),    # 32→31
-            nn.Conv2d(512, 1, kernel_size=4, stride=1, padding=1),   # 31→30
+            nn.utils.spectral_norm(nn.Conv2d(512, 1, kernel_size=4, stride=1, padding=1)),   # 31→30
             # No sigmoid — raw logits for BCEWithLogitsLoss
         )
 

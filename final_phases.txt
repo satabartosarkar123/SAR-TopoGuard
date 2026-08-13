@@ -1,0 +1,35 @@
+2026-08-13 07:03:50,676 | dataset | WARNING | rasterio not installed — falling back to tifffile / PIL. Install via `pip install rasterio` for full GeoTIFF support.
+2026-08-13 07:03:50,677 | INFO | Initializing Overnight MLOps Pipeline...
+2026-08-13 07:03:50,677 | OvernightPipeline | INFO | Initializing Overnight MLOps Pipeline...
+2026-08-13 07:03:50,679 | INFO | Free Disk Space: 65.41 GB
+2026-08-13 07:03:50,679 | OvernightPipeline | INFO | Free Disk Space: 65.41 GB
+2026-08-13 07:03:50,679 | INFO | Phase 'inference' transitioned to: IN_PROGRESS
+2026-08-13 07:03:50,679 | OvernightPipeline | INFO | Phase 'inference' transitioned to: IN_PROGRESS
+2026-08-13 07:03:50,680 | INFO | --- Starting Inference Engine ---
+2026-08-13 07:03:50,680 | OvernightPipeline | INFO | --- Starting Inference Engine ---
+C:\Users\USER\SAR_AutoGuard\run_overnight_pipeline.py:251: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint1 = torch.load("checkpoints/pix2pix_baseline_epoch049.pt")
+C:\Users\USER\SAR_AutoGuard\run_overnight_pipeline.py:254: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  checkpoint2 = torch.load("checkpoints/pix2pix_edge_epoch049.pt")
+2026-08-13 07:04:09,142 | INFO | Phase 'inference' transitioned to: COMPLETED
+2026-08-13 07:04:09,142 | OvernightPipeline | INFO | Phase 'inference' transitioned to: COMPLETED
+2026-08-13 07:04:09,143 | INFO | Phase 'proxy' transitioned to: IN_PROGRESS
+2026-08-13 07:04:09,143 | OvernightPipeline | INFO | Phase 'proxy' transitioned to: IN_PROGRESS
+2026-08-13 07:04:09,144 | INFO | --- Starting ORB-SMR Proxy ---
+2026-08-13 07:04:09,144 | OvernightPipeline | INFO | --- Starting ORB-SMR Proxy ---
+2026-08-13 07:04:13,892 | INFO | Phase 'proxy' transitioned to: COMPLETED
+2026-08-13 07:04:13,892 | OvernightPipeline | INFO | Phase 'proxy' transitioned to: COMPLETED
+2026-08-13 07:04:13,894 | INFO | Phase 'metrics' transitioned to: IN_PROGRESS
+2026-08-13 07:04:13,894 | OvernightPipeline | INFO | Phase 'metrics' transitioned to: IN_PROGRESS
+2026-08-13 07:04:13,895 | INFO | --- Starting Metrics Calculation ---
+2026-08-13 07:04:13,895 | OvernightPipeline | INFO | --- Starting Metrics Calculation ---
+2026-08-13 07:04:13,915 | INFO | Phase 'metrics' transitioned to: COMPLETED
+2026-08-13 07:04:13,915 | OvernightPipeline | INFO | Phase 'metrics' transitioned to: COMPLETED
+2026-08-13 07:04:13,916 | INFO | Phase 'report' transitioned to: IN_PROGRESS
+2026-08-13 07:04:13,916 | OvernightPipeline | INFO | Phase 'report' transitioned to: IN_PROGRESS
+2026-08-13 07:04:13,917 | INFO | --- Generating Morning Report ---
+2026-08-13 07:04:13,917 | OvernightPipeline | INFO | --- Generating Morning Report ---
+2026-08-13 07:04:14,257 | INFO | PIPELINE COMPLETE. Check results/SUMMARY_REPORT.txt.
+2026-08-13 07:04:14,257 | OvernightPipeline | INFO | PIPELINE COMPLETE. Check results/SUMMARY_REPORT.txt.
+2026-08-13 07:04:14,258 | INFO | Phase 'report' transitioned to: COMPLETED
+2026-08-13 07:04:14,258 | OvernightPipeline | INFO | Phase 'report' transitioned to: COMPLETED

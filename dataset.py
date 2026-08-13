@@ -60,7 +60,7 @@ try:
     HAS_RASTERIO = True
 except ImportError:
     HAS_RASTERIO = False
-    logger.warning(
+    logger.info(
         "rasterio not installed — falling back to tifffile / PIL. "
         "Install via `pip install rasterio` for full GeoTIFF support."
     )
@@ -414,47 +414,98 @@ def _center_crop(arr: np.ndarray, size: int) -> np.ndarray:
 
 
 # ======================================================================
-# 5.  Normalisation
+# 5.  Normalisation  (Percentile-based, outputs [-1, 1] for Tanh)
 # ======================================================================
 
 def normalise_sar(img: np.ndarray) -> np.ndarray:
     """
-    Normalise SAR intensities to [0, 1].
+    Normalise SAR intensities to [-1, 1].
 
-    SEN1-2 SAR patches may arrive in one of two scales:
-      • **dB scale** (typical range  −25 … +5 dB)
-      • **Linear intensity** (0 … large)
+    SEN1-2 SAR patches may arrive as:
+      - **dB scale** (typical range  -25 ... +5 dB)
+      - **Linear intensity** (0 ... large)
+      - **uint8 PNG** (0 ... 255) — mini_sen12_data pre-processed patches
 
-    Heuristic: if the median is negative, assume dB.
+    For uint8/PNG data, we use percentile stretching.
+    For dB data (median < 0), we clip to [-25, 0] and linearly scale.
+    For linear power data (large values), we convert to dB first.
 
-    dB → [0,1]:
-        clip to [−25, 0],  then  (x + 25) / 25
-    Linear → [0,1]:
-        clip to [0, p99],  then  x / p99
+    Final output: [-1, 1] float32, shape (C, H, W).
     """
+    img = img.astype(np.float32)
+
+    if img.max() <= 1.0 + 1e-6 and img.min() >= -1.0 - 1e-6:
+        # Already normalised (unlikely but safe guard)
+        return img.astype(np.float32)
+
     if np.median(img) < 0:
         # dB scale
         img = np.clip(img, -25.0, 0.0)
-        img = (img + 25.0) / 25.0
+        img = (img + 25.0) / 25.0  # -> [0, 1]
+    elif img.max() > 300.0:
+        # Linear power scale -> convert to dB first
+        img = 10.0 * np.log10(img + 1e-6)
+        img = np.clip(img, -25.0, 0.0)
+        img = (img + 25.0) / 25.0  # -> [0, 1]
     else:
-        # Linear intensity
-        p99 = np.percentile(img, 99) + 1e-8
-        img = np.clip(img, 0.0, p99)
-        img = img / p99
+        # uint8 or already [0, 255] range: percentile stretch
+        p2 = np.percentile(img, 2)
+        p98 = np.percentile(img, 98)
+        if (p98 - p2) > 1e-6:
+            img = (img - p2) / (p98 - p2)
+        else:
+            img = np.zeros_like(img)
+        img = np.clip(img, 0.0, 1.0)
+
+    # Map [0, 1] -> [-1, 1]
+    img = (img * 2.0) - 1.0
     return img.astype(np.float32)
 
 
 def normalise_optical(img: np.ndarray) -> np.ndarray:
     """
-    Normalise Sentinel-2 optical reflectance to [0, 1].
+    Normalise Sentinel-2 optical reflectance to [-1, 1].
 
-    SEN12MS stores Sentinel-2 as uint16 surface reflectance × 10 000.
-    If the max value exceeds 1.0, we divide by 10 000 and clip.
+    Handles all common formats:
+      - **uint16 surface reflectance x 10000** (SEN12MS GeoTIFF)
+      - **uint8 [0, 255]** (pre-processed PNGs in mini_sen12_data)
+      - **float [0, 1]** (already normalised)
+
+    Uses robust 2nd/98th percentile stretching to handle outliers
+    (clouds, shadows, sensor saturation).
+
+    Final output: [-1, 1] float32, shape (C, H, W).
     """
-    if img.max() > 1.0:
-        img = img / 10_000.0
+    img = img.astype(np.float32)
+
+    # Percentile-based contrast stretch (per-image, all bands jointly)
+    p2 = np.percentile(img, 2)
+    p98 = np.percentile(img, 98)
+
+    if (p98 - p2) > 1e-6:
+        img = (img - p2) / (p98 - p2)
+    else:
+        # Flat image (rare) — map to mid-gray
+        img = np.zeros_like(img)
+
+    # Clip to [0, 1]
     img = np.clip(img, 0.0, 1.0)
+
+    # Map [0, 1] -> [-1, 1] for Tanh generator output
+    img = (img * 2.0) - 1.0
     return img.astype(np.float32)
+
+
+def denormalize_for_display(img: np.ndarray) -> np.ndarray:
+    """
+    Inverse of the [-1, 1] normalisation. Used ONLY for saving images
+    or computing metrics — NOT during training.
+
+    Input:  [-1, 1]
+    Output: [0, 1]
+    """
+    img = (img + 1.0) / 2.0
+    return np.clip(img, 0.0, 1.0)
 
 
 # ======================================================================
