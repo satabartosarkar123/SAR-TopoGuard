@@ -223,17 +223,21 @@ def figure_5():
         fig, axes = plt.subplots(5, 4, figsize=(7, 9))
         plt.subplots_adjust(wspace=0.02, hspace=0.02)
         
+        def find_existing_path(base_dirs, names, exts):
+            for d in base_dirs:
+                for name in names:
+                    for ext in exts:
+                        p = Path(f"{d}/{name}{ext}")
+                        if p.exists():
+                            return p
+            return Path(f"{base_dirs[0]}/{names[0]}{exts[0]}")
+
         for j, img_id in enumerate(top_ids):
-            # Locate SAR and OPT paths (could be in train or val)
-            sar_p = Path(f"mini_sen12_data/val/s1/{img_id}.png")
-            if not sar_p.exists():
-                sar_p = Path(f"mini_sen12_data/train/s1/{img_id}.png")
-            
             img_id_s2 = img_id.replace("_s1_", "_s2_")
-            opt_p = Path(f"mini_sen12_data/val/s2/{img_id_s2}.png")
-            if not opt_p.exists():
-                opt_p = Path(f"mini_sen12_data/train/s2/{img_id_s2}.png")
-                
+            
+            sar_p = find_existing_path(["mini_sen12_data/val/s1", "mini_sen12_data/train/s1"], [img_id], [".png", ".tif"])
+            opt_p = find_existing_path(["mini_sen12_data/val/s2", "mini_sen12_data/train/s2"], [img_id, img_id_s2], [".png", ".tif"])
+            
             b1_p = Path(f"results/generated_images/baseline1/{img_id}.png")
             b2_p = Path(f"results/generated_images/baseline2/{img_id}.png")
             tg_p = Path(f"results/generated_images/topoguard/{img_id}.png")
@@ -263,6 +267,8 @@ def figure_5():
                         img = np.clip((img - p2) / (p98 - p2 + 1e-6), 0, 1)
                         ax.imshow(img, cmap='gray')
                     elif i == 1:
+                        if img.ndim == 3 and img.shape[-1] > 3:
+                            img = img[..., :3]
                         p2, p98 = np.percentile(img, 2), np.percentile(img, 98)
                         img = np.clip((img - p2) / (p98 - p2 + 1e-6), 0, 1)
                         ax.imshow(img)
