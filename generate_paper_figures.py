@@ -174,7 +174,7 @@ def figure_4():
             smr_m.append(row['smr']['mean'].values[0] * 100)
             smr_s.append(row['smr']['std'].values[0] * 100)
             
-        fig, axes = plt.subplots(2, 2, figsize=(7, 5))
+        fig, axes = plt.subplots(2, 2, figsize=(8, 6))
         axs = axes.flatten()
         
         def plot_bar(ax, means, stds, title, ylabel, ylim=None, fmt="{:.3f}"):
@@ -184,14 +184,16 @@ def figure_4():
             if ylim:
                 ax.set_ylim(ylim)
             ax.grid(axis='y', linestyle='-', alpha=0.3)
+            ax.tick_params(axis='x', labelrotation=15, labelsize=9)
+            
             # Value labels
             for bar in bars:
                 height = bar.get_height()
                 ax.annotate(fmt.format(height),
                             xy=(bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, 3),  
+                            xytext=(0, 5),  
                             textcoords="offset points",
-                            ha='center', va='bottom', fontsize=8)
+                            ha='center', va='bottom', fontsize=9)
         
         plot_bar(axs[0], psnr_m, psnr_s, "(a) PSNR", "PSNR (dB)", ylim=[11, 14], fmt="{:.3f}")
         plot_bar(axs[1], ssim_m, ssim_s, "(b) SSIM", "SSIM", ylim=[0.10, 0.25], fmt="{:.3f}")
@@ -200,9 +202,9 @@ def figure_4():
         
         import matplotlib.patches as mpatches
         handles = [matplotlib.patches.Patch(color=c, label=l) for c, l in zip(colors, labels)]
-        fig.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=3)
+        fig.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 0.98), ncol=3, fontsize=10)
         
-        plt.tight_layout()
+        plt.tight_layout(rect=[0, 0, 1, 0.92], h_pad=2.5, w_pad=2.0)
         kb = _save_fig(fig, "figure4_bars")
         plt.close(fig)
         return ("Figure 4", "figure4_bars.png", "figure4_bars.pdf", kb, "OK")
