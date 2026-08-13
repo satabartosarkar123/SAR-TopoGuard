@@ -52,7 +52,12 @@ def figure_1():
         p98 = np.percentile(opt_img, 98)
         opt_stretch = np.clip((opt_img - p2) / (p98 - p2 + 1e-6), 0, 1)
         
-        sar_log = 10 * np.log10(sar_img[..., 0] + 1e-6)
+        sar_c0 = sar_img[..., 0]
+        if sar_c0.max() <= 0:
+            sar_log = sar_c0
+        else:
+            sar_log = 10 * np.log10(sar_c0 + 1e-6)
+            
         p2_s = np.percentile(sar_log, 2)
         p98_s = np.percentile(sar_log, 98)
         sar_stretch = np.clip((sar_log - p2_s) / (p98_s - p2_s + 1e-6), 0, 1)
