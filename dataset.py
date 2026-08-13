@@ -210,8 +210,8 @@ def _discover_patch_pairs(
         common_seasons = sorted(set(s1_map.keys()) & set(s2_map.keys()))
         if not common_seasons:
             # Alternative flat layout: tifs directly under ROI dir
-            sar_files = sorted(roi_dir.glob("*_s1_*.tif"))
-            opt_files = sorted(roi_dir.glob("*_s2_*.tif"))
+            sar_files = sorted([f for f in roi_dir.glob("*_s1_*.*") if f.suffix.lower() in [".tif", ".png"]])
+            opt_files = sorted([f for f in roi_dir.glob("*_s2_*.*") if f.suffix.lower() in [".tif", ".png"]])
             sar_by_pid = {f.stem.split("_p")[-1]: f for f in sar_files}
             opt_by_pid = {f.stem.split("_p")[-1]: f for f in opt_files}
             for pid in sorted(set(sar_by_pid) & set(opt_by_pid)):
@@ -225,8 +225,8 @@ def _discover_patch_pairs(
             continue
 
         for season in common_seasons:
-            sar_files = sorted(s1_map[season].glob("*.tif"))
-            opt_files = sorted(s2_map[season].glob("*.tif"))
+            sar_files = sorted([f for f in s1_map[season].glob("*.*") if f.suffix.lower() in [".tif", ".png"]])
+            opt_files = sorted([f for f in s2_map[season].glob("*.*") if f.suffix.lower() in [".tif", ".png"]])
 
             # Build a mapping from patch number to file
             sar_by_pid: Dict[str, Path] = {}
@@ -356,7 +356,14 @@ def _load_tiff(path: Path, channels: int) -> np.ndarray:
     • tifffile   — lightweight fallback
     • PIL/Pillow — last resort (RGB only, no 16-bit SAR)
     """
-    if HAS_RASTERIO:
+    if str(path).lower().endswith('.png') or str(path).lower().endswith('.jpg'):
+        pil_img = Image.open(path)
+        img = np.array(pil_img, dtype=np.float32)
+        if img.ndim == 2:
+            img = img[np.newaxis, ...]
+        elif img.ndim == 3:
+            img = np.transpose(img, (2, 0, 1))
+    elif HAS_RASTERIO:
         with rasterio.open(path) as src:
             img = src.read()  # (bands, H, W), dtype varies
     elif HAS_TIFFFILE:

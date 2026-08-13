@@ -29,8 +29,8 @@ Metric Definitions
         M_flat(X) = exp( −10.0 · clamp(G(X), 0, 0.3) )     (flatness mask from SAR)
         HFI = mean( H(Y) ⊙ M_flat(X) )
 
-    A *high* HFI → the model is injecting edges where the SAR input
-    has no structural evidence → hallucination.
+    A *high* HFI -> the model is injecting edges where the SAR input
+    has no structural evidence -> hallucination.
 
 3.  **Pooled Gradient Magnitude Correlation (GMC)**
 
@@ -39,7 +39,7 @@ Metric Definitions
 
         GMC = cosine_similarity( pool(G(X))_flat , pool(G(Y))_flat )
 
-    A GMC close to 1.0 → the optical output faithfully reproduces
+    A GMC close to 1.0 -> the optical output faithfully reproduces
     the SAR structure.
 
 Author : SAR-TopoGuard team
@@ -67,7 +67,7 @@ logger = logging.getLogger(__name__)
 
 class TopologicalVerifier(nn.Module):
     """
-    Inference-time topological verifier for SAR → Optical translation.
+    Inference-time topological verifier for SAR -> Optical translation.
 
     All kernels (Sobel, Laplacian) are registered as **non-learnable
     buffers** and follow the exact LaTeX formulations from the paper.
@@ -219,7 +219,7 @@ class TopologicalVerifier(nn.Module):
         •  M_flat(X) — mask that is ≈ 1.0 in structurally flat SAR
            regions and ≈ 0.0 near edges.
         •  HFI — expected high-frequency energy in flat SAR regions.
-           High value → hallucination.
+           High value -> hallucination.
 
         Parameters
         ----------
@@ -237,19 +237,19 @@ class TopologicalVerifier(nn.Module):
         high_freq = torch.abs(
             F.conv2d(opt_flat, self.laplacian, padding=1)
         ).reshape(B_opt, C_opt, H, W)
-        # Average across optical channels → (B, 1, H, W)
+        # Average across optical channels -> (B, 1, H, W)
         high_freq = high_freq.mean(dim=1, keepdim=True)
 
         # ── SAR gradient magnitude ───────────────────────────────────
         gm_sar = self.gradient_magnitude(sar)
-        # Average across SAR channels → (B, 1, H, W)
+        # Average across SAR channels -> (B, 1, H, W)
         gm_sar = gm_sar.mean(dim=1, keepdim=True)
 
         # ── Flatness mask ────────────────────────────────────────────
         # M_flat(X) = exp( −γ · clamp(G(X), 0, c_max) )
         #
-        # • Near edges:  G(X) ≈ c_max  → M ≈ exp(−γ·c_max) ≈ 0.05  (suppressed)
-        # • Flat regions: G(X) ≈ 0     → M ≈ exp(0) = 1.0           (active)
+        # • Near edges:  G(X) ≈ c_max  -> M ≈ exp(−γ·c_max) ≈ 0.05  (suppressed)
+        # • Flat regions: G(X) ≈ 0     -> M ≈ exp(0) = 1.0           (active)
         clamped_gm = torch.clamp(gm_sar, min=0.0, max=self.gm_clamp_max)
         flatness_mask = torch.exp(-self.flatness_gain * clamped_gm)
 
@@ -297,7 +297,7 @@ class TopologicalVerifier(nn.Module):
         gm_sar = self.gradient_magnitude(sar)      # (B, C_sar, H, W)
         gm_opt = self.gradient_magnitude(optical)   # (B, C_opt, H, W)
 
-        # ── Channel averaging → (B, 1, H, W) ────────────────────────
+        # ── Channel averaging -> (B, 1, H, W) ────────────────────────
         gm_sar = gm_sar.mean(dim=1, keepdim=True)
         gm_opt = gm_opt.mean(dim=1, keepdim=True)
 
