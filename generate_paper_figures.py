@@ -122,7 +122,8 @@ def figure_3():
         axes[0].imshow(y_best)
         axes[0].set_xlabel("Y_best", fontsize=10)
         
-        im1 = axes[1].imshow(m_edge, cmap='hot', vmin=0, vmax=1)
+        im1 = axes[1].imshow(m_edge, cmap='viridis')
+        fig.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
         axes[1].set_xlabel("M_edge", fontsize=10)
         
         axes[2].imshow(y_low)
@@ -187,7 +188,7 @@ def figure_4():
         plot_bar(axs[0], psnr_m, psnr_s, "(a) PSNR", "PSNR (dB)", ylim=[11, 14], fmt="{:.3f}")
         plot_bar(axs[1], ssim_m, ssim_s, "(b) SSIM", "SSIM", ylim=[0.10, 0.25], fmt="{:.4f}")
         plot_bar(axs[2], eiou_m, eiou_s, "(c) Edge-IoU", "Edge-IoU (%)", fmt="{:.2f}")
-        plot_bar(axs[3], smr_m, smr_s, "(d) SMR", "SMR (%)", fmt="{:.3f}")
+        plot_bar(axs[3], smr_m, smr_s, "(d) SMR", "SMR", fmt="{:.3f}")
         
         import matplotlib.patches as mpatches
         handles = [matplotlib.patches.Patch(color=c, label=l) for c, l in zip(colors, labels)]
@@ -353,9 +354,6 @@ def figure_6():
         ax = axes[0]
         ax.plot(b1_agg['epoch'], b1_agg['G'], color='#808080', linestyle='-', alpha=0.7, label='Vanilla Pix2Pix')
         ax.plot(b2_agg['epoch'], b2_agg['G'], color='#6BAED6', linestyle='-', alpha=0.7, label='B2 + Edge Loss')
-        # Smooth and reduce loss for SAR-TopoGuard to show clean and stable convergence
-        tg_loss = pd.Series(b2_agg['G'].values).rolling(window=5, min_periods=1).mean().values * 0.84 - 2.2
-        ax.plot(b2_agg['epoch'], tg_loss, color='#E63946', linestyle='-', linewidth=2.5, label='SAR-TopoGuard (Ours)')
         ax.set_title("(a) Generator Loss", fontsize=11, fontweight='bold', loc='left')
         ax.set_xlabel("Epoch")
         ax.set_ylabel("G Loss")
@@ -379,11 +377,6 @@ def figure_6():
                 x = [item[0] for item in collapse_var[b]]
                 y = [item[1] for item in collapse_var[b]]
                 ax.plot(x, y, marker='o', markersize=5, color=color, alpha=0.7, label=lbl)
-                
-        # Add SAR-TopoGuard (Ours) collapse check variance (consistently higher & more stable)
-        tg_x = [10, 20, 30, 40, 50]
-        tg_y = [0.0558, 0.0569, 0.0581, 0.0579, 0.0585]
-        ax.plot(tg_x, tg_y, marker='s', markersize=6, color='#E63946', linewidth=2.5, label='SAR-TopoGuard (Ours)')
                 
         ax.axhline(y=0.005, color='black', linestyle='--', linewidth=1)
         ax.text(10, 0.007, "Collapse threshold", fontsize=8)
