@@ -125,7 +125,8 @@ def figure_3():
         m_edge_3 = np.expand_dims(m_edge, axis=-1)
         y_final = np.clip(y_low + m_edge_3 * y_high, 0, 1)
         
-        fig, axes = plt.subplots(1, 4, figsize=(7, 2.0))
+        fig, axes = plt.subplots(2, 2, figsize=(4.5, 4.5))
+        axes = axes.flatten()
         axes[0].imshow(y_best)
         axes[0].set_xlabel("Y_best", fontsize=10)
         
@@ -142,6 +143,8 @@ def figure_3():
         for ax in axes:
             ax.set_xticks([])
             ax.set_yticks([])
+            
+        plt.tight_layout()
             
         kb = _save_fig(fig, "figure3_gating")
         plt.close(fig)
