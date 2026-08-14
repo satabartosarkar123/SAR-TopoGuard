@@ -19,9 +19,16 @@ OUT_DIR = Path("paper_figures")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def _save_fig(fig, name):
-    fig.savefig(OUT_DIR / f"{name}.png", dpi=DPI, bbox_inches='tight')
-    fig.savefig(OUT_DIR / f"{name}.pdf", dpi=DPI, bbox_inches='tight')
-    size_kb = (OUT_DIR / f"{name}.png").stat().st_size / 1024
+    png_path = OUT_DIR / f"{name}.png"
+    pdf_path = OUT_DIR / f"{name}.pdf"
+    fig.savefig(png_path, dpi=DPI, bbox_inches='tight')
+    try:
+        from PIL import Image
+        img = Image.open(png_path)
+        img.convert('RGB').save(pdf_path, "PDF", resolution=100.0)
+    except ImportError:
+        fig.savefig(pdf_path, dpi=DPI, bbox_inches='tight')
+    size_kb = png_path.stat().st_size / 1024
     print(f"Generating {name}... done. ({size_kb:.1f} KB)")
     return size_kb
 
