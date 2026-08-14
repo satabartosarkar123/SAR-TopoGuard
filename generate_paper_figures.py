@@ -358,7 +358,7 @@ def figure_6():
         b1_agg = agg[agg['method'] == 'baseline1'].sort_values('epoch')
         b2_agg = agg[agg['method'] == 'baseline2'].sort_values('epoch')
         
-        fig, axes = plt.subplots(1, 3, figsize=(11, 3.5))
+        fig, axes = plt.subplots(3, 1, figsize=(7, 10))
         
         # (a) Generator Loss
         ax = axes[0]
