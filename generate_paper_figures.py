@@ -13,24 +13,49 @@ import warnings
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.size'] = 10
 matplotlib.rcParams['axes.linewidth'] = 0.8
-DPI = 300
+DPI = 600
 
 OUT_DIR = Path("paper_figures")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-def _save_fig(fig, name):
-    png_path = OUT_DIR / f"{name}.png"
-    pdf_path = OUT_DIR / f"{name}.pdf"
-    fig.savefig(png_path, dpi=DPI, bbox_inches='tight')
-    try:
-        from PIL import Image
-        img = Image.open(png_path)
-        img.convert('RGB').save(pdf_path, "PDF", resolution=100.0)
-    except ImportError:
-        fig.savefig(pdf_path, dpi=DPI, bbox_inches='tight')
-    size_kb = png_path.stat().st_size / 1024
-    print(f"Generating {name}... done. ({size_kb:.1f} KB)")
-    return size_kb
+import matplotlib.patheffects as pe
+
+def add_cartographic_elements(ax, image_size=256, resolution=10):
+    # 500m scale bar = 50 pixels (10m/px)
+    import matplotlib.patches as patches
+    
+    # Scale bar background and line
+    rect = patches.Rectangle((image_size - 60, image_size - 15), 50, 5, fill=True, color='white', zorder=10)
+    rect2 = patches.Rectangle((image_size - 60, image_size - 15), 50, 5, fill=False, color='black', linewidth=1, zorder=11)
+    ax.add_patch(rect)
+    ax.add_patch(rect2)
+    ax.text(image_size - 35, image_size - 20, '500 m', color='white', fontsize=8, ha='center', va='bottom', zorder=12,
+            path_effects=[pe.withStroke(linewidth=1.5, foreground="black")])
+    
+    # North arrow
+    ax.annotate('N', xy=(15, 15), xytext=(15, 30),
+                arrowprops=dict(facecolor='white', edgecolor='black', width=1.5, headwidth=5, headlength=7),
+                ha='center', va='center', color='white', fontsize=9, fontweight='bold', zorder=12,
+                path_effects=[pe.withStroke(linewidth=1.5, foreground="black")])
+
+def _save_fig(fig, name, vector=False):
+    if vector:
+        path1 = OUT_DIR / f"{name}.pdf"
+        path2 = OUT_DIR / f"{name}.eps"
+        fig.savefig(path1, dpi=DPI, bbox_inches='tight', format='pdf')
+        fig.savefig(path2, dpi=DPI, bbox_inches='tight', format='eps')
+        size_kb = path1.stat().st_size / 1024
+        print(f"Generating {name} (Vector)... done. ({size_kb:.1f} KB)")
+        return size_kb, path1.name, path2.name
+    else:
+        path1 = OUT_DIR / f"{name}.png"
+        path2 = OUT_DIR / f"{name}.tif"
+        fig.savefig(path1, dpi=DPI, bbox_inches='tight', format='png')
+        # We need PIL for tiff format if matplotlib doesn't support it natively, but matplotlib supports tiff via pillow
+        fig.savefig(path2, dpi=DPI, bbox_inches='tight', format='tiff', pil_kwargs={"compression": "tiff_lzw"})
+        size_kb = path1.stat().st_size / 1024
+        print(f"Generating {name} (Raster)... done. ({size_kb:.1f} KB)")
+        return size_kb, path1.name, path2.name
 
 def load_image(path):
     path_str = str(path)
@@ -82,14 +107,15 @@ def figure_1():
         for ax in axes:
             ax.set_xticks([])
             ax.set_yticks([])
+            add_cartographic_elements(ax)
             
         plt.subplots_adjust(wspace=0.02, left=0.01, right=0.99, bottom=0.01, top=0.99)
             
-        kb = _save_fig(fig, "figure1_normalization")
+        kb, path1, path2 = _save_fig(fig, "figure1_normalization", vector=False)
         plt.close(fig)
         print(f"  Panel (a) stats: min={opt_naive.min():.3f}, max={opt_naive.max():.3f}, mean={opt_naive.mean():.3f}")
         print(f"  Panel (b) stats: min={opt_stretch.min():.3f}, max={opt_stretch.max():.3f}, mean={opt_stretch.mean():.3f}")
-        return ("Figure 1", "figure1_normalization.png", "figure1_normalization.pdf", kb, "OK")
+        return ("Figure 1", path1, path2, kb, "OK")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -146,9 +172,9 @@ def figure_3():
             
         plt.tight_layout()
             
-        kb = _save_fig(fig, "figure3_gating")
+        kb, path1, path2 = _save_fig(fig, "figure3_gating", vector=False)
         plt.close(fig)
-        return ("Figure 3", "figure3_gating.png", "figure3_gating.pdf", kb, "OK")
+        return ("Figure 3", path1, path2, kb, "OK")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -205,9 +231,9 @@ def figure_4():
         fig.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 0.98), ncol=3, fontsize=10)
         
         plt.tight_layout(rect=[0, 0, 1, 0.92], h_pad=2.5, w_pad=2.0)
-        kb = _save_fig(fig, "figure4_bars")
+        kb, path1, path2 = _save_fig(fig, "figure4_bars", vector=True)
         plt.close(fig)
-        return ("Figure 4", "figure4_bars.png", "figure4_bars.pdf", kb, "OK")
+        return ("Figure 4", path1, path2, kb, "OK")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -300,15 +326,18 @@ def figure_5():
                         for spine in axins.spines.values():
                             spine.set_edgecolor('white')
                             spine.set_linewidth(1.5)
+                    
+                    if i in [0, 1]:
+                        add_cartographic_elements(ax)
                             
                 else:
                     print(f"Warning: Missing {p}")
                     ax.imshow(np.full((256,256,3), 0.5))
                     ax.text(128, 128, "MISSING", ha='center', va='center', color='red')
                     
-        kb = _save_fig(fig, "figure5_qualitative")
+        kb, path1, path2 = _save_fig(fig, "figure5_qualitative", vector=False)
         plt.close(fig)
-        return ("Figure 5", "figure5_qualitative.png", "figure5_qualitative.pdf", kb, "OK")
+        return ("Figure 5", path1, path2, kb, "OK")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -400,9 +429,9 @@ def figure_6():
         ax.legend(loc='lower right', fontsize=8)
         
         plt.tight_layout()
-        kb = _save_fig(fig, "figure6_training")
+        kb, path1, path2 = _save_fig(fig, "figure6_training", vector=True)
         plt.close(fig)
-        return ("Figure 6", "figure6_training.png", "figure6_training.pdf", kb, "OK")
+        return ("Figure 6", path1, path2, kb, "OK")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -420,7 +449,7 @@ if __name__ == "__main__":
     print("\n" + "="*80)
     print("SUMMARY")
     print("="*80)
-    print(f"{'Figure':<10} | {'PNG Path':<30} | {'PDF Path':<30} | {'Size (KB)':<10} | {'Status'}")
+    print(f"{'Figure':<10} | {'Output 1':<30} | {'Output 2':<30} | {'Size (KB)':<10} | {'Status'}")
     print("-" * 80)
     for res in results:
         print(f"{res[0]:<10} | {res[1]:<30} | {res[2]:<30} | {res[3]:<10.1f} | {res[4]}")
