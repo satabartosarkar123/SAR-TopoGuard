@@ -16,7 +16,10 @@ matplotlib.rcParams['axes.linewidth'] = 0.8
 DPI = 600
 
 OUT_DIR = Path("paper_figures")
-OUT_DIR.mkdir(parents=True, exist_ok=True)
+PNG_DIR = OUT_DIR / "png"
+PDF_DIR = OUT_DIR / "pdf"
+PNG_DIR.mkdir(parents=True, exist_ok=True)
+PDF_DIR.mkdir(parents=True, exist_ok=True)
 
 import matplotlib.patheffects as pe
 
@@ -40,22 +43,22 @@ def add_cartographic_elements(ax, image_size=256, resolution=10):
 
 def _save_fig(fig, name, vector=False):
     if vector:
-        path1 = OUT_DIR / f"{name}.pdf"
-        path2 = OUT_DIR / f"{name}.eps"
+        path1 = PDF_DIR / f"{name}.pdf"
+        path2 = PDF_DIR / f"{name}.eps"
         fig.savefig(path1, dpi=DPI, bbox_inches='tight', format='pdf')
         fig.savefig(path2, dpi=DPI, bbox_inches='tight', format='eps')
         size_kb = path1.stat().st_size / 1024
         print(f"Generating {name} (Vector)... done. ({size_kb:.1f} KB)")
-        return size_kb, path1.name, path2.name
+        return size_kb, f"pdf/{path1.name}", f"pdf/{path2.name}"
     else:
-        path1 = OUT_DIR / f"{name}.png"
-        path2 = OUT_DIR / f"{name}.tif"
+        path1 = PNG_DIR / f"{name}.png"
+        path2 = PNG_DIR / f"{name}.tif"
         fig.savefig(path1, dpi=DPI, bbox_inches='tight', format='png')
         # We need PIL for tiff format if matplotlib doesn't support it natively, but matplotlib supports tiff via pillow
         fig.savefig(path2, dpi=DPI, bbox_inches='tight', format='tiff', pil_kwargs={"compression": "tiff_lzw"})
         size_kb = path1.stat().st_size / 1024
         print(f"Generating {name} (Raster)... done. ({size_kb:.1f} KB)")
-        return size_kb, path1.name, path2.name
+        return size_kb, f"png/{path1.name}", f"png/{path2.name}"
 
 def load_image(path):
     path_str = str(path)
